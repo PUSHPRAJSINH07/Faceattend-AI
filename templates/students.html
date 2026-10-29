@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Student Biometric Registration{% endblock %}
+
+{% block content %}
+<div class="students-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Student Biometric Management</h1>
+            <p class="page-subtitle">Register new student passport profiles and manage enrolled facial representations.</p>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="toggleRegistrationModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Register New Student</span>
+        </button>
+    </div>
+
+    <!-- Privacy & Ethics Advisory Callout -->
+    <div class="info-alert">
+        <div class="info-alert-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        </div>
+        <div class="info-alert-content">
+            <strong>Biometric Data Governance &amp; Ethics Notice:</strong>
+            This educational prototype converts facial photographs into irreversible 128-dimensional floating point mathematical vectors (embeddings) using the deep neural network model SFace. Deleting a student profile permanently purges both their uploaded photograph and stored facial representation from the database.
+        </div>
+    </div>
+
+    <!-- Registration Section (Collapsible Modal / Card) -->
+    <div id="registrationCard" class="registration-card card-hidden">
+        <div class="card-header-flex">
+            <div>
+                <h2 class="card-title">Enroll New Student</h2>
+                <p class="card-subtitle">Enter student details and provide a single front-facing passport photograph.</p>
+            </div>
+            <button type="button" class="btn-close-card" onclick="toggleRegistrationModal()">&times;</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('students') }}" enctype="multipart/form-data" id="studentForm" class="student-form">
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Student Name *</label>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="enrollment_no">Enrollment / Roll Number *</label>
+                    <input type="text" id="enrollment_no" name="enrollment_no" class="form-control text-uppercase" placeholder="e.g. EN202404" required>
+                    <small class="form-hint">Unique college roll number</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="student_class">Class / Division *</label>
+                    <input type="text" id="student_class" name="student_class" class="form-control" placeholder="e.g. TY-IF (IT 6th Sem)" required>
+                </div>
+            </div>
+
+            <!-- Photo Input Mode Selector (File Upload vs Webcam Capture) -->
+            <div class="photo-selection-area">
+                <div class="photo-tabs">
+                    <button type="button" class="photo-tab active" id="tabUpload" onclick="switchPhotoTab('upload')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        Upload Passport Image
+                    </button>
+                    <button type="button" class="photo-tab" id="tabWebcam" onclick="switchPhotoTab('webcam')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                        Capture via Webcam
+                    </button>
+                </div>
+
+                <!-- Tab 1: File Upload -->
+                <div id="paneUpload" class="photo-pane">
+                    <div class="file-dropzone" id="dropzone" onclick="document.getElementById('photo_file').click()">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <p class="dropzone-text">Click to choose image or drag &amp; drop passport photo</p>
+                        <span class="dropzone-sub">Supported formats: JPG, JPEG, PNG, WEBP (Max 16 MB)</span>
+                        <input type="file" id="photo_file" name="photo_file" accept="image/*" class="file-input-hidden" onchange="previewSelectedFile(this)">
+                    </div>
+                </div>
+
+                <!-- Tab 2: Webcam Capture -->
+                <div id="paneWebcam" class="photo-pane pane-hidden">
+                    <div class="webcam-capture-container">
+                        <div class="webcam-view-wrapper">
+                            <video id="regVideo" autoplay playsinline muted class="reg-video"></video>
+                            <canvas id="regCanvas" class="reg-canvas-hidden"></canvas>
+                        </div>
+                        <div class="webcam-controls">
+                            <button type="button" class="btn btn-sm btn-outline" id="btnStartRegCam" onclick="startRegCamera()">
+                                Start Camera
+                            </button>
+                            <button type="button" class="btn btn-sm btn-primary" id="btnSnapRegCam" onclick="captureRegPhoto()" disabled>
+                                Snap Photo
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="btnStopRegCam" onclick="stopRegCamera()" disabled>
+                                Stop Camera
+                            </button>
+                        </div>
+                        <input type="hidden" id="webcam_image" name="webcam_image" value="">
+                    </div>
+                </div>
+
+                <!-- Image Preview Area -->
+                <div id="previewContainer" class="preview-container preview-hidden">
+                    <span class="preview-title">Selected Photo Preview:</span>
+                    <div class="preview-box">
+                        <img id="imgPreview" src="" alt="Selected Photo">
+                    </div>
+                    <span class="preview-note">&check; Face verification model will validate this image upon submission</span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="toggleRegistrationModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="btnSubmitStudent">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span>Extract Biometrics &amp; Save Student</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Registered Students List -->
+    <div class="content-card">
+        <div class="card-header-flex">
+            <div>
+                <h2 class="card-title">Enrolled Students ({{ students|length }})</h2>
+                <p class="card-subtitle">Active biometric profiles ready for real-time recognition</p>
+            </div>
+            <div class="search-box-sm">
+                <input type="text" id="studentSearchInput" class="form-control form-control-sm" placeholder="Filter by name or roll..." onkeyup="filterStudentList()">
+            </div>
+        </div>
+
+        {% if students %}
+        <div class="table-responsive">
+            <table class="data-table" id="studentsTable">
+                <thead>
+                    <tr>
+                        <th>Passport Photo</th>
+                        <th>Student Name</th>
+                        <th>Enrollment No</th>
+                        <th>Class / Sem</th>
+                        <th>Days Attended / Record</th>
+                        <th>Registered Date</th>
+                        <th>Biometric Vector</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr class="student-row">
+                        <td>
+                            <div class="avatar-passport-wrapper">
+                                <img src="{{ url_for('student_photo', filename=s.photo_filename) }}" alt="{{ s.name }}" class="avatar-passport">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="student-name font-bold">{{ s.name }}</span>
+                        </td>
+                        <td>
+                            <span class="badge-code">{{ s.enrollment_no }}</span>
+                        </td>
+                        <td>
+                            <span class="student-sub">{{ s.student_class }}</span>
+                        </td>
+                        <td>
+                            <div class="attendance-summary-cell">
+                                <span class="days-attended-pill">
+                                    <strong>{{ s.days_present|default(0) }}</strong> Days Present
+                                </span>
+                                <span class="attendance-pct-tag {% if (s.attendance_rate|default(0)) >= 75 %}tag-good{% elif (s.attendance_rate|default(0)) > 0 %}tag-warning{% else %}tag-zero{% endif %}">
+                                    {{ s.attendance_rate|default(0) }}%
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-muted">{{ s.created_at.strftime('%Y-%m-%d') if s.created_at and s.created_at.strftime else s.created_at }}</span>
+                        </td>
+                        <td>
+                            <span class="badge-vector">128-D SFace (OK)</span>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('delete_student', student_id=s.id) }}" onsubmit="return confirm('Permanently remove student {{ s.name }} and their facial biometric data?');" class="inline-form">
+                                <button type="submit" class="btn-icon-danger" title="Delete Student & Biometrics">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p class="empty-title">No Students Registered Yet</p>
+            <p class="empty-text">Click "Register New Student" above to add your first student.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let regStream = null;
+
+function toggleRegistrationModal() {
+    const card = document.getElementById('registrationCard');
+    card.classList.toggle('card-hidden');
+    if (!card.classList.contains('card-hidden')) {
+        card.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        stopRegCamera();
+    }
+}
+
+function switchPhotoTab(tab) {
+    const btnUpload = document.getElementById('tabUpload');
+    const btnWebcam = document.getElementById('tabWebcam');
+    const paneUpload = document.getElementById('paneUpload');
+    const paneWebcam = document.getElementById('paneWebcam');
+
+    if (tab === 'upload') {
+        btnUpload.classList.add('active');
+        btnWebcam.classList.remove('active');
+        paneUpload.classList.remove('pane-hidden');
+        paneWebcam.classList.add('pane-hidden');
+        stopRegCamera();
+    } else {
+        btnWebcam.classList.add('active');
+        btnUpload.classList.remove('active');
+        paneWebcam.classList.remove('pane-hidden');
+        paneUpload.classList.add('pane-hidden');
+    }
+}
+
+function previewSelectedFile(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('imgPreview').src = e.target.result;
+            document.getElementById('previewContainer').classList.remove('preview-hidden');
+            document.getElementById('webcam_image').value = ''; // clear webcam snapshot
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+async function startRegCamera() {
+    try {
+        regStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 480, height: 480, facingMode: 'user' }
+        });
+        const video = document.getElementById('regVideo');
+        video.srcObject = regStream;
+        document.getElementById('btnStartRegCam').disabled = true;
+        document.getElementById('btnSnapRegCam').disabled = false;
+        document.getElementById('btnStopRegCam').disabled = false;
+    } catch (err) {
+        alert('Could not access webcam for registration: ' + err.message);
+    }
+}
+
+function stopRegCamera() {
+    if (regStream) {
+        regStream.getTracks().forEach(t => t.stop());
+        regStream = null;
+    }
+    const video = document.getElementById('regVideo');
+    if (video) video.srcObject = null;
+    const btnStart = document.getElementById('btnStartRegCam');
+    const btnSnap = document.getElementById('btnSnapRegCam');
+    const btnStop = document.getElementById('btnStopRegCam');
+    if (btnStart) btnStart.disabled = false;
+    if (btnSnap) btnSnap.disabled = true;
+    if (btnStop) btnStop.disabled = true;
+}
+
+function captureRegPhoto() {
+    const video = document.getElementById('regVideo');
+    const canvas = document.getElementById('regCanvas');
+    if (!video || !regStream) return;
+
+    canvas.width = video.videoWidth || 480;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    document.getElementById('webcam_image').value = dataUrl;
+    document.getElementById('photo_file').value = ''; // clear file input
+
+    document.getElementById('imgPreview').src = dataUrl;
+    document.getElementById('previewContainer').classList.remove('preview-hidden');
+
+    stopRegCamera();
+}
+
+function filterStudentList() {
+    const filter = document.getElementById('studentSearchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#studentsTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Header Greeting and Action Bar -->
+    <div class="page-header">
+        <div class="header-titles">
+            <h1 class="page-title">Attendance Dashboard</h1>
+            <p class="page-subtitle">Overview for <span class="text-primary font-semibold">{{ stats.today_formatted }}</span></p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('recognition') }}" class="btn btn-primary btn-pulse">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                <span>Launch Camera Attendance</span>
+            </a>
+            <a href="{{ url_for('students') }}" class="btn btn-outline">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Register Student</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Metric Cards Grid -->
+    <div class="stats-grid">
+        <!-- Card 1: Total Registered Students -->
+        <div class="stat-card stat-students">
+            <div class="stat-icon-wrapper icon-blue">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Registered</span>
+                <span class="stat-value">{{ stats.total_students }}</span>
+                <span class="stat-caption">Active student biometric profiles</span>
+            </div>
+        </div>
+
+        <!-- Card 2: Present Today -->
+        <div class="stat-card stat-present">
+            <div class="stat-icon-wrapper icon-green">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Present Today</span>
+                <span class="stat-value text-success">{{ stats.present_today }}</span>
+                <span class="stat-caption">
+                    {% if stats.total_students > 0 %}
+                        {{ ((stats.present_today / stats.total_students) * 100) | round(1) }}% attendance rate
+                    {% else %}
+                        0% attendance
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Card 3: Unmarked / Absent Today -->
+        <div class="stat-card stat-absent">
+            <div class="stat-icon-wrapper icon-amber">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Not Yet Marked</span>
+                <span class="stat-value text-amber">{{ stats.absent_today }}</span>
+                <span class="stat-caption">Pending check-in today</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Date & AI Engine -->
+        <div class="stat-card stat-system">
+            <div class="stat-icon-wrapper icon-purple">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">AI Recognition Model</span>
+                <span class="stat-value-sm">YuNet + SFace</span>
+                <span class="stat-caption">128-D Cosine Metric Engine</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Banner -->
+    <div class="quick-nav-grid">
+        <a href="{{ url_for('recognition') }}" class="quick-nav-card quick-nav-primary">
+            <div class="quick-nav-content">
+                <span class="quick-nav-badge">Primary Action</span>
+                <h3>Live Face Recognition</h3>
+                <p>Open browser webcam to automatically recognize students and register attendance in real-time.</p>
+            </div>
+            <div class="quick-nav-arrow">&rarr;</div>
+        </a>
+
+        <a href="{{ url_for('students') }}" class="quick-nav-card">
+            <div class="quick-nav-content">
+                <span class="quick-nav-badge">Management</span>
+                <h3>Student Profiles</h3>
+                <p>Register new students with passport photos, view enrolled student database, or remove profiles.</p>
+            </div>
+            <div class="quick-nav-arrow">&rarr;</div>
+        </a>
+
+        <a href="{{ url_for('attendance') }}" class="quick-nav-card">
+            <div class="quick-nav-content">
+                <span class="quick-nav-badge">Reports</span>
+                <h3>Attendance History</h3>
+                <p>View complete log with dates, exact timestamps, AI confidence scores, and export to CSV.</p>
+            </div>
+            <div class="quick-nav-arrow">&rarr;</div>
+        </a>
+    </div>
+
+    <!-- Two-Column Activity Section -->
+    <div class="activity-grid">
+        <!-- Left: Recent Attendance Feed -->
+        <div class="content-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">Recent Attendance Activity</h2>
+                    <p class="card-subtitle">Latest attendance check-ins marked by system</p>
+                </div>
+                <a href="{{ url_for('attendance') }}" class="link-more">View All &rarr;</a>
+            </div>
+
+            {% if stats.recent_records %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Enrollment</th>
+                            <th>Time</th>
+                            <th>Confidence</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in stats.recent_records %}
+                        <tr>
+                            <td class="student-cell">
+                                <img src="{{ url_for('student_photo', filename=r.photo_filename) }}" alt="{{ r.name }}" class="avatar-sm">
+                                <div>
+                                    <div class="student-name">{{ r.name }}</div>
+                                    <div class="student-sub">{{ r.student_class }}</div>
+                                </div>
+                            </td>
+                            <td><span class="badge-code">{{ r.enrollment_no }}</span></td>
+                            <td><span class="text-muted">{{ r.time }}</span></td>
+                            <td>
+                                <span class="badge-confidence">{{ r.confidence }}%</span>
+                            </td>
+                            <td>
+                                <span class="badge-status status-present">
+                                    <span class="dot-present"></span> {{ r.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </div>
+                <p class="empty-title">No attendance marked yet today</p>
+                <p class="empty-text">Start the live camera or manually record student attendance.</p>
+                <a href="{{ url_for('recognition') }}" class="btn btn-sm btn-primary">Start Live Camera</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Unmarked Students (Absentees) -->
+        <div class="content-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">Pending Students for {{ stats.today_date }} ({{ stats.unmarked_students|length }})</h2>
+                    <p class="card-subtitle">Students not yet marked Present on active session date</p>
+                </div>
+            </div>
+
+            {% if stats.unmarked_students %}
+            <div class="unmarked-list">
+                {% for s in stats.unmarked_students %}
+                <div class="unmarked-item">
+                    <div class="unmarked-student">
+                        <img src="{{ url_for('student_photo', filename=s.photo_filename) }}" alt="{{ s.name }}" class="avatar-sm">
+                        <div>
+                            <div class="student-name">{{ s.name }}</div>
+                            <div class="student-sub">{{ s.enrollment_no }} &bull; {{ s.student_class }}</div>
+                        </div>
+                    </div>
+                    <!-- Quick Manual Correction Action -->
+                    <form method="POST" action="{{ url_for('manual_attendance') }}" class="inline-form">
+                        <input type="hidden" name="student_id" value="{{ s.id }}">
+                        <input type="hidden" name="date" value="{{ stats.today_date }}">
+                        <input type="hidden" name="status" value="Present">
+                        <button type="submit" class="btn btn-xs btn-outline-success" title="Mark Present manually">
+                            Mark Present
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon icon-success">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <p class="empty-title">100% Attendance Completed!</p>
+                <p class="empty-text">All registered students have been marked present for {{ stats.today_date }}.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Cumulative Attendance Record per Student (Multi-Day Tracking) -->
+    <div class="content-card mt-6">
+        <div class="card-header-flex">
+            <div>
+                <h2 class="card-title">Cumulative Attendance Records (Multi-Day Summary)</h2>
+                <p class="card-subtitle">Tracking how many days each registered student has attended across all recorded session days (Total Recorded Sessions: <strong>{{ stats.total_working_days }}</strong>)</p>
+            </div>
+            <a href="{{ url_for('students') }}" class="btn btn-sm btn-outline">Manage Students &rarr;</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Enrollment No</th>
+                        <th>Class</th>
+                        <th>Total Days Present</th>
+                        <th>Overall Attendance %</th>
+                        <th>Last Attended Date</th>
+                        <th>Status Evaluation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for st in stats.students_summary %}
+                    <tr>
+                        <td class="student-cell">
+                            <img src="{{ url_for('student_photo', filename=st.photo_filename) }}" alt="{{ st.name }}" class="avatar-sm">
+                            <span class="student-name">{{ st.name }}</span>
+                        </td>
+                        <td><span class="badge-code">{{ st.enrollment_no }}</span></td>
+                        <td><span class="student-sub">{{ st.student_class }}</span></td>
+                        <td>
+                            <strong class="text-primary">{{ st.days_present }}</strong> / {{ st.total_working_days }} Days
+                        </td>
+                        <td>
+                            <div class="progress-wrap">
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill {% if st.attendance_rate >= 75 %}bar-green{% elif st.attendance_rate >= 50 %}bar-amber{% else %}bar-red{% endif %}" style="width: {{ st.attendance_rate }}%;"></div>
+                                </div>
+                                <span class="progress-text font-bold">{{ st.attendance_rate }}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-muted">{{ st.last_seen_date or 'No check-in yet' }}</span>
+                        </td>
+                        <td>
+                            {% if st.attendance_rate >= 75 %}
+                            <span class="badge-status status-present">&check; Eligible (&ge;75%)</span>
+                            {% elif st.attendance_rate > 0 %}
+                            <span class="badge-status status-warning">&excl; Low Attendance</span>
+                            {% else %}
+                            <span class="badge-status status-danger">&cross; 0% Attendance</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance History &amp; Records{% endblock %}
+
+{% block content %}
+<div class="attendance-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Attendance History &amp; Audit Logs</h1>
+            <p class="page-subtitle">Search, filter, export, and manually adjust verified attendance records.</p>
+        </div>
+        <div class="header-actions">
+            <!-- Manual Attendance Entry Button -->
+            <button type="button" class="btn btn-outline" onclick="toggleManualAttendanceModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Manual Entry / Override</span>
+            </button>
+
+            <!-- Export to CSV Button -->
+            <a href="{{ url_for('export_attendance_csv', date=date_filter, search=search_query) }}" class="btn btn-primary" title="Export matching records to CSV format">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Export to CSV</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar Card -->
+    <div class="content-card filter-card">
+        <form method="GET" action="{{ url_for('attendance') }}" class="filter-form">
+            <div class="filter-group">
+                <label for="filterDate" class="filter-label">Filter by Date:</label>
+                <input type="date" id="filterDate" name="date" class="form-control form-control-sm" value="{{ date_filter }}">
+            </div>
+
+            <div class="filter-group flex-grow">
+                <label for="filterSearch" class="filter-label">Search Student Name or Roll:</label>
+                <input type="text" id="filterSearch" name="search" class="form-control form-control-sm" placeholder="e.g. Aarav, EN202401, TY-IF..." value="{{ search_query }}">
+            </div>
+
+            <div class="filter-buttons">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Apply Filter</span>
+                </button>
+                {% if date_filter or search_query %}
+                <a href="{{ url_for('attendance') }}" class="btn btn-sm btn-outline">Reset Filter</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Manual Attendance Entry Modal -->
+    <div id="manualModal" class="modal-overlay modal-hidden">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">Manual Attendance Entry</h3>
+                <button type="button" class="modal-close" onclick="toggleManualAttendanceModal()">&times;</button>
+            </div>
+            <form method="POST" action="{{ url_for('manual_attendance') }}" class="modal-body">
+                <p class="modal-help-text">Record or override attendance in case of camera failure, student absence, or authorized leave.</p>
+
+                <div class="form-group">
+                    <label class="form-label" for="manualStudent">Select Student *</label>
+                    <select id="manualStudent" name="student_id" class="form-control" required>
+                        <option value="">-- Choose Enrolled Student --</option>
+                        {% for s in all_students %}
+                        <option value="{{ s.id }}">{{ s.name }} ({{ s.enrollment_no }}) - {{ s.student_class }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="manualDate">Date *</label>
+                        <input type="date" id="manualDate" name="date" class="form-control" value="{{ today_date }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="manualTime">Time (optional)</label>
+                        <input type="text" id="manualTime" name="time" class="form-control" placeholder="e.g. 09:30:00 AM">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="manualStatus">Status *</label>
+                    <select id="manualStatus" name="status" class="form-control" required>
+                        <option value="Present" selected>Present</option>
+                        <option value="Late">Late</option>
+                        <option value="Excused">Excused Leave</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="toggleManualAttendanceModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Attendance Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Attendance Records Table -->
+    <div class="content-card">
+        <div class="card-header-flex">
+            <div>
+                <h2 class="card-title">Attendance Log ({{ records|length }} records)</h2>
+                <p class="card-subtitle">
+                    {% if date_filter %}
+                        Showing logs for date: <strong>{{ date_filter }}</strong>
+                    {% else %}
+                        Showing all recorded check-ins across all dates
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        {% if records %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Enrollment No</th>
+                        <th>Class / Sem</th>
+                        <th>Date</th>
+                        <th>Timestamp</th>
+                        <th>Status</th>
+                        <th>Match Confidence</th>
+                        <th>Verification Method</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td class="student-cell">
+                            <img src="{{ url_for('student_photo', filename=r.photo_filename) }}" alt="{{ r.name }}" class="avatar-sm">
+                            <span class="student-name">{{ r.name }}</span>
+                        </td>
+                        <td><span class="badge-code">{{ r.enrollment_no }}</span></td>
+                        <td><span class="student-sub">{{ r.student_class }}</span></td>
+                        <td><strong>{{ r.date }}</strong></td>
+                        <td><span class="text-muted">{{ r.time }}</span></td>
+                        <td>
+                            <span class="badge-status status-present">
+                                <span class="dot-present"></span> {{ r.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge-confidence">{{ r.confidence }}%</span>
+                        </td>
+                        <td>
+                            <span class="badge-method">{{ r.marked_by }}</span>
+                        </td>
+                        <td>
+                            <!-- Manual correction delete button -->
+                            <form method="POST" action="{{ url_for('delete_attendance', record_id=r.id) }}" onsubmit="return confirm('Remove attendance entry for {{ r.name }} on {{ r.date }}?');" class="inline-form">
+                                <button type="submit" class="btn-icon-danger" title="Remove Entry (Manual Correction)">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+            <p class="empty-title">No Attendance Records Found</p>
+            <p class="empty-text">Try adjusting the date or search filter, or mark attendance via the live webcam.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function toggleManualAttendanceModal() {
+    const modal = document.getElementById('manualModal');
+    modal.classList.toggle('modal-hidden');
+}
+
+// Close modal when clicking outside modal dialog
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('manualModal');
+    if (e.target === modal) {
+        modal.classList.add('modal-hidden');
+    }
+});
+</script>
+{% endblock %}

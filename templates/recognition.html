@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Live Face Recognition Attendance{% endblock %}
+
+{% block content %}
+<div class="recognition-wrapper">
+    <!-- Top Header & Instructions -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Live AI Facial Recognition Attendance</h1>
+            <p class="page-subtitle">Real-time deep learning face detection and verification through browser webcam.</p>
+        </div>
+        <div class="header-badges">
+            <span class="badge-session-date">Active Date: <strong>{{ active_session_date }}</strong></span>
+            <form method="POST" action="{{ url_for('advance_day') }}" class="inline-form">
+                <button type="submit" class="btn btn-xs btn-outline-primary" title="Advance to Next Day to test multi-day attendance">
+                    + Advance Day (+1)
+                </button>
+            </form>
+            <span class="badge-active-model">YuNet + SFace (128-D)</span>
+            <span class="badge-student-count">{{ students_count }} Enrolled</span>
+        </div>
+    </div>
+
+    <!-- Recognition Layout Grid -->
+    <div class="recognition-grid">
+        <!-- Left Panel: Webcam Stream & Bounding Box Canvas -->
+        <div class="webcam-main-panel content-card">
+            <div class="card-header-flex">
+                <div class="webcam-status-indicator">
+                    <span class="indicator-dot" id="streamDot"></span>
+                    <span class="indicator-text" id="streamStatusText">Camera Inactive</span>
+                </div>
+                <div class="stream-controls">
+                    <button type="button" class="btn btn-sm btn-success" id="btnStartCam" onclick="startWebcam()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span>Start Camera</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline" id="btnFlipCam" onclick="flipCamera()" title="Switch Front / Rear Camera (Mobile)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
+                        <span>Flip Cam</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="btnStopCam" onclick="stopWebcam()" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"></rect></svg>
+                        <span>Stop</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Video Viewport with Overlay Canvas -->
+            <div class="viewport-container">
+                <video id="webcamVideo" autoplay playsinline muted></video>
+                <canvas id="overlayCanvas"></canvas>
+
+                <!-- Initial Idle Overlay -->
+                <div id="idleOverlay" class="idle-overlay">
+                    <div class="idle-content">
+                        <div class="idle-camera-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                        </div>
+                        <h3>Webcam is Currently Turned Off</h3>
+                        <p>Click the <strong>Start Camera</strong> button above to begin real-time face detection and attendance logging.</p>
+                        <button type="button" class="btn btn-primary" onclick="startWebcam()">Turn On Camera</button>
+                    </div>
+                </div>
+
+                <!-- Live Target Guide Reticle -->
+                <div id="targetReticle" class="target-reticle reticle-hidden">
+                    <div class="reticle-corner tl"></div>
+                    <div class="reticle-corner tr"></div>
+                    <div class="reticle-corner bl"></div>
+                    <div class="reticle-corner br"></div>
+                    <span class="reticle-hint">Align Face Inside Box</span>
+                </div>
+
+                <!-- Dramatic Animated Unregistered Person Alert HUD -->
+                <div id="unregisteredAlertHUD" class="unregistered-hud hud-hidden">
+                    <div class="hud-content">
+                        <div class="hud-warning-icon">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                        </div>
+                        <div class="hud-text">
+                            <h3>NOT REGISTERED</h3>
+                            <p>Access Denied &bull; Face Not Found in Database</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Recognition Banner -->
+            <div id="recognitionStatusBanner" class="recognition-banner banner-idle">
+                <div class="banner-icon" id="bannerIcon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </div>
+                <div class="banner-details">
+                    <h4 id="bannerTitle">Awaiting Camera Feed</h4>
+                    <p id="bannerSubtitle">Position a registered student in front of the camera.</p>
+                </div>
+                <div class="banner-meta" id="bannerMeta">
+                    <span class="badge-metric" id="metricConfidence">Similarity: --</span>
+                </div>
+            </div>
+
+            <!-- Recognition Settings & Diagnostics -->
+            <div class="diagnostics-bar">
+                <div class="diagnostic-item">
+                    <span class="diag-label">Matching Algorithm:</span>
+                    <span class="diag-value">Cosine Similarity Metric</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diag-label">Recognition Threshold:</span>
+                    <span class="diag-value">{{ threshold }} (Fixed Standard)</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diag-label">Inference Frame Rate:</span>
+                    <span class="diag-value" id="fpsDisplay">Idle</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Live Attendance Log -->
+        <div class="live-attendance-panel content-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">Today's Check-ins</h2>
+                    <p class="card-subtitle">Real-time attendance record stream</p>
+                </div>
+                <span class="badge-count" id="todayCountBadge">{{ today_records|length }} Present</span>
+            </div>
+
+            <!-- Audio toggle -->
+            <div class="audio-toggle-bar">
+                <label class="toggle-checkbox">
+                    <input type="checkbox" id="chkAudioFeedback" checked>
+                    <span>Sound notification on recognition</span>
+                </label>
+            </div>
+
+            <!-- Scrollable Live Feed -->
+            <div class="live-feed-list" id="liveFeedList">
+                {% if today_records %}
+                    {% for r in today_records %}
+                    <div class="feed-item" id="feed-student-{{ r.student_id }}">
+                        <img src="{{ url_for('student_photo', filename=r.photo_filename) }}" alt="{{ r.name }}" class="feed-avatar">
+                        <div class="feed-info">
+                            <div class="feed-name">{{ r.name }}</div>
+                            <div class="feed-roll">{{ r.enrollment_no }} &bull; {{ r.student_class }}</div>
+                            <div class="feed-meta">
+                                <span class="feed-time">{{ r.time }}</span>
+                                <span class="badge-conf-sm">{{ r.confidence }}% Match</span>
+                            </div>
+                        </div>
+                        <div class="feed-status">
+                            <span class="badge-status status-present">&check; Present</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state-sm" id="emptyFeedState">
+                        <p class="empty-title">No check-ins recorded yet today</p>
+                        <p class="empty-text">Stand before the camera to record your attendance.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- College Viva Explanation Notes -->
+    <div class="tech-explanation-card">
+        <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            How Pretrained Deep Learning Facial Recognition Works (Presentation Quick Reference)
+        </h3>
+        <div class="tech-steps-grid">
+            <div class="tech-step">
+                <div class="step-num">1</div>
+                <h4>Face Detection (YuNet)</h4>
+                <p>A fast, lightweight convolutional neural network detects the bounding box and 5 key facial landmarks (left/right eyes, nose tip, left/right mouth corners) regardless of slight tilt.</p>
+            </div>
+            <div class="tech-step">
+                <div class="step-num">2</div>
+                <h4>Affine Alignment &amp; Normalization</h4>
+                <p>The detected face is geometrically rotated and cropped into a standardized 112&times;112 pixel canvas so lighting and pose variations are minimized.</p>
+            </div>
+            <div class="tech-step">
+                <div class="step-num">3</div>
+                <h4>Embedding Extraction (SFace)</h4>
+                <p>A deep CNN maps the aligned face into an irreversible 128-dimensional mathematical vector where faces of the same person are clustered close together.</p>
+            </div>
+            <div class="tech-step">
+                <div class="step-num">4</div>
+                <h4>Cosine Similarity &amp; Attendance</h4>
+                <p>The vector is matched against registered student encodings. If cosine similarity &ge; 0.45, identity is verified and attendance is saved with uniqueness check (no duplicates).</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+{% endblock %}

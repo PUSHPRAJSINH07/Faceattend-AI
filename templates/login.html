@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <!-- Card Header -->
+        <div class="auth-header">
+            <div class="auth-logo-badge">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <h1 class="auth-title">Administrator Portal</h1>
+            <p class="auth-subtitle">AI Face Recognition Attendance System</p>
+            <div class="academic-tag">Developed by <strong>PUSHPRAJSINH RATHOD</strong> &bull; Diploma Engineering IT</div>
+        </div>
+
+        <!-- Admin Credentials Quick Access Box -->
+        <div class="demo-credentials-box">
+            <div class="demo-box-header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Admin Login Credentials</span>
+            </div>
+            <div class="demo-creds-grid">
+                <div class="cred-item">
+                    <span class="cred-label">Username:</span>
+                    <code class="cred-value" onclick="fillCreds('admin', 'admin123')" title="Click to fill">admin</code>
+                </div>
+                <div class="cred-item">
+                    <span class="cred-label">Password:</span>
+                    <code class="cred-value" onclick="fillCreds('admin', 'admin123')" title="Click to fill">admin123</code>
+                </div>
+            </div>
+            <button type="button" class="btn-autofill" onclick="fillCreds('admin', 'admin123')">
+                Fill Admin Credentials
+            </button>
+        </div>
+
+        <!-- Login Form -->
+        <form method="POST" action="{{ url_for('login') }}" class="auth-form" autocomplete="off">
+            <div class="form-group">
+                <label for="username" class="form-label">
+                    <span>Admin Username</span>
+                </label>
+                <div class="input-with-icon">
+                    <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter username (admin)" required autofocus>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">
+                    <span>Password</span>
+                </label>
+                <div class="input-with-icon">
+                    <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter password (admin123)" required>
+                    <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility()" title="Show/Hide Password">
+                        <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                <span>Sign In to Dashboard</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+        </form>
+
+        <div class="auth-security-notice">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Password hashed with PBKDF2:SHA256 &bull; Secure session protected</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function fillCreds(u, p) {
+    document.getElementById('username').value = u;
+    document.getElementById('password').value = p;
+    document.getElementById('username').focus();
+}
+
+function togglePasswordVisibility() {
+    const pwInput = document.getElementById('password');
+    if (pwInput.type === 'password') {
+        pwInput.type = 'text';
+    } else {
+        pwInput.type = 'password';
+    }
+}
+</script>
+{% endblock %}

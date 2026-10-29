@@ -1,0 +1,9 @@
+# AI Face Recognition Attendance System - Requirements
+# Python 3.11 Compatible (100% Free & Open-Source, No Paid APIs)
+
+Flask>=3.0.0
+opencv-python>=4.5.4
+numpy>=1.20.0
+Werkzeug>=3.0.0
+Pillow>=10.0.0
+gunicorn>=21.2.0
