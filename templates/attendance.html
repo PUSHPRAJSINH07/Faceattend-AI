@@ -1,25 +1,25 @@
 {% extends "base.html" %}
 
-{% block title %}Attendance History &amp; Records{% endblock %}
+{% block title %}Attendance History & Records{% endblock %}
 
 {% block content %}
 <div class="attendance-wrapper">
     <div class="page-header">
         <div>
-            <h1 class="page-title">Attendance History &amp; Audit Logs</h1>
+            <h1 class="page-title">Attendance History & Audit Logs</h1>
             <p class="page-subtitle">Search, filter, export, and manually adjust verified attendance records.</p>
         </div>
         <div class="header-actions">
             <!-- Manual Attendance Entry Button -->
             <button type="button" class="btn btn-outline" onclick="toggleManualAttendanceModal()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                <span>Manual Entry / Override</span>
+                <span>Manual Entry</span>
             </button>
 
             <!-- Export to CSV Button -->
             <a href="{{ url_for('export_attendance_csv', date=date_filter, search=search_query) }}" class="btn btn-primary" title="Export matching records to CSV format">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>Export to CSV</span>
+                <span>Export CSV</span>
             </a>
         </div>
     </div>
@@ -28,22 +28,34 @@
     <div class="content-card filter-card">
         <form method="GET" action="{{ url_for('attendance') }}" class="filter-form">
             <div class="filter-group">
-                <label for="filterDate" class="filter-label">Filter by Date:</label>
+                <label for="filterDate" class="filter-label">Date:</label>
                 <input type="date" id="filterDate" name="date" class="form-control form-control-sm" value="{{ date_filter }}">
             </div>
 
             <div class="filter-group flex-grow">
-                <label for="filterSearch" class="filter-label">Search Student Name or Roll:</label>
-                <input type="text" id="filterSearch" name="search" class="form-control form-control-sm" placeholder="e.g. Aarav, EN202401, TY-IF..." value="{{ search_query }}">
+                <label for="filterSearch" class="filter-label">Search Name / Roll:</label>
+                <input type="text" id="filterSearch" name="search" class="form-control form-control-sm" placeholder="e.g. Aarav, EN202401..." value="{{ search_query }}">
             </div>
+
+            {% if teacher_batches and teacher_batches|length > 1 %}
+            <div class="filter-group">
+                <label for="filterBatch" class="filter-label">Batch:</label>
+                <select id="filterBatch" name="batch_id" class="form-control form-control-sm">
+                    <option value="">All Batches</option>
+                    {% for b in teacher_batches %}
+                    <option value="{{ b.id }}" {% if request.args.get('batch_id')|int == b.id %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
 
             <div class="filter-buttons">
                 <button type="submit" class="btn btn-sm btn-primary">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <span>Apply Filter</span>
+                    <span>Filter</span>
                 </button>
                 {% if date_filter or search_query %}
-                <a href="{{ url_for('attendance') }}" class="btn btn-sm btn-outline">Reset Filter</a>
+                <a href="{{ url_for('attendance') }}" class="btn btn-sm btn-outline">Reset</a>
                 {% endif %}
             </div>
         </form>
@@ -53,11 +65,14 @@
     <div id="manualModal" class="modal-overlay modal-hidden">
         <div class="modal-dialog">
             <div class="modal-header">
-                <h3 class="modal-title">Manual Attendance Entry</h3>
+                <div>
+                    <h3 class="modal-title">Manual Attendance Entry</h3>
+                    <p class="modal-subtitle">Record or override attendance</p>
+                </div>
                 <button type="button" class="modal-close" onclick="toggleManualAttendanceModal()">&times;</button>
             </div>
             <form method="POST" action="{{ url_for('manual_attendance') }}" class="modal-body">
-                <p class="modal-help-text">Record or override attendance in case of camera failure, student absence, or authorized leave.</p>
+                <p class="modal-help-text">Use this for camera failures, late entries, or authorized leave.</p>
 
                 <div class="form-group">
                     <label class="form-label" for="manualStudent">Select Student *</label>
@@ -91,13 +106,13 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline" onclick="toggleManualAttendanceModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Attendance Record</button>
+                    <button type="submit" class="btn btn-primary">Save Record</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Attendance Records Table -->
+    <!-- Attendance Records -->
     <div class="content-card">
         <div class="card-header-flex">
             <div>
@@ -113,18 +128,23 @@
         </div>
 
         {% if records %}
-        <div class="table-responsive">
+
+        <!-- Desktop Table View -->
+        <div class="table-responsive desktop-only">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th>Student</th>
                         <th>Enrollment No</th>
                         <th>Class / Sem</th>
+                        {% if teacher_batches and teacher_batches|length > 1 %}
+                        <th>Batch</th>
+                        {% endif %}
                         <th>Date</th>
-                        <th>Timestamp</th>
+                        <th>Time</th>
                         <th>Status</th>
-                        <th>Match Confidence</th>
-                        <th>Verification Method</th>
+                        <th>Match %</th>
+                        <th>Method</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -137,6 +157,9 @@
                         </td>
                         <td><span class="badge-code">{{ r.enrollment_no }}</span></td>
                         <td><span class="student-sub">{{ r.student_class }}</span></td>
+                        {% if teacher_batches and teacher_batches|length > 1 %}
+                        <td><span class="badge-code" style="background:var(--accent-light);color:var(--accent);">{{ r.batch_name if r.batch_name else '—' }}</span></td>
+                        {% endif %}
                         <td><strong>{{ r.date }}</strong></td>
                         <td><span class="text-muted">{{ r.time }}</span></td>
                         <td>
@@ -151,9 +174,8 @@
                             <span class="badge-method">{{ r.marked_by }}</span>
                         </td>
                         <td>
-                            <!-- Manual correction delete button -->
                             <form method="POST" action="{{ url_for('delete_attendance', record_id=r.id) }}" onsubmit="return confirm('Remove attendance entry for {{ r.name }} on {{ r.date }}?');" class="inline-form">
-                                <button type="submit" class="btn-icon-danger" title="Remove Entry (Manual Correction)">
+                                <button type="submit" class="btn-icon-danger" title="Remove Entry">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                 </button>
                             </form>
@@ -163,6 +185,37 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Mobile Card View -->
+        <div class="mobile-only">
+            {% for r in records %}
+            <div class="mobile-record-card">
+                <img src="{{ url_for('student_photo', filename=r.photo_filename) }}" alt="{{ r.name }}" class="avatar-sm" style="flex-shrink:0;border-radius:50%;width:44px;height:44px;object-fit:cover;">
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                        <span style="font-size:0.9rem;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.name }}</span>
+                        <span class="badge-status status-present" style="flex-shrink:0;font-size:0.7rem;">✓ {{ r.status }}</span>
+                    </div>
+                    <div style="font-size:0.76rem;color:var(--text-muted);margin-top:3px;">
+                        {{ r.enrollment_no }} &bull; {{ r.student_class }}
+                        {% if r.batch_name %} &bull; <span style="color:var(--accent);">{{ r.batch_name }}</span>{% endif %}
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+                        <span style="font-size:0.78rem;color:var(--text-secondary);">📅 {{ r.date }} &bull; {{ r.time }}</span>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                            <span class="badge-confidence" style="font-size:0.72rem;">{{ r.confidence }}%</span>
+                            <form method="POST" action="{{ url_for('delete_attendance', record_id=r.id) }}" onsubmit="return confirm('Remove?');" class="inline-form">
+                                <button type="submit" class="btn-icon-danger" style="padding:4px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
         {% else %}
         <div class="empty-state">
             <div class="empty-icon">
@@ -183,7 +236,6 @@ function toggleManualAttendanceModal() {
     modal.classList.toggle('modal-hidden');
 }
 
-// Close modal when clicking outside modal dialog
 window.addEventListener('click', function(e) {
     const modal = document.getElementById('manualModal');
     if (e.target === modal) {

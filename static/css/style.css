@@ -2391,3 +2391,930 @@ body.app-body {
         gap: 8px;
     }
 }
+
+/* ==========================================================================
+   NEW MULTI-TENANT / BATCH / MOBILE CSS ADDITIONS
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Visibility Helpers
+   -------------------------------------------------------------------------- */
+.desktop-only { display: block; }
+.mobile-only  { display: none; }
+
+/* --------------------------------------------------------------------------
+   Teacher Profile Badge (Header)
+   -------------------------------------------------------------------------- */
+.teacher-profile-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #3b82f6);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+}
+
+.teacher-info-mini {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.teacher-name-txt {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.teacher-dept-txt {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Batch Selector Pill (Header)
+   -------------------------------------------------------------------------- */
+.batch-selector-wrap {
+    display: flex;
+    align-items: center;
+}
+
+.btn-batch-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary-light);
+    border: 1.5px solid var(--primary-border);
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--primary);
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.btn-batch-pill:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.batch-pill-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chevron-icon {
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+/* --------------------------------------------------------------------------
+   Modal Overlay & Dialog (used for Batch Modal, Manual Attendance)
+   -------------------------------------------------------------------------- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.55);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    backdrop-filter: blur(4px);
+    transition: opacity 0.2s;
+}
+
+.modal-hidden {
+    display: none !important;
+}
+
+.modal-dialog {
+    background: var(--bg-surface);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    background: var(--bg-surface);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    z-index: 1;
+}
+
+.modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.modal-body {
+    padding: 20px 24px;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-help-text {
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    background: var(--info-light);
+    border: 1px solid var(--info-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+}
+
+/* --------------------------------------------------------------------------
+   Batch List in Modal
+   -------------------------------------------------------------------------- */
+.batch-list-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.batch-card-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-soft);
+    gap: 10px;
+    transition: var(--transition);
+}
+
+.batch-card-item:hover {
+    border-color: var(--primary-border);
+    background: var(--primary-light);
+}
+
+.batch-card-active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.batch-active-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--primary);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+}
+
+.batch-title-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.batch-meta-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.batch-switch-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   Add Batch Section in Modal
+   -------------------------------------------------------------------------- */
+.add-batch-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 16px;
+    margin-top: 8px;
+}
+
+.btn-toggle-add-batch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1.5px dashed var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 10px 16px;
+    width: 100%;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    justify-content: center;
+}
+
+.btn-toggle-add-batch:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.new-batch-form {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   Batch Hero Card (Dashboard Top)
+   -------------------------------------------------------------------------- */
+.batch-hero-card {
+    background: linear-gradient(135deg, #1e3a8a 0%, #4f46e5 60%, #6366f1 100%);
+    border-radius: var(--radius-xl);
+    padding: 24px 28px;
+    color: #fff;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(79,70,229,0.22);
+    position: relative;
+    overflow: hidden;
+}
+
+.batch-hero-card::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -10%;
+    width: 220px;
+    height: 220px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+}
+
+.batch-hero-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.batch-hero-text h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+}
+
+.batch-hero-text p {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin: 0;
+}
+
+.batch-hero-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.hero-active-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.hero-dept-pill {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.76rem;
+    color: rgba(255,255,255,0.85);
+}
+
+/* --------------------------------------------------------------------------
+   Batches Horizontal Grid (Multi-batch comparison)
+   -------------------------------------------------------------------------- */
+.batches-horizontal-grid {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+}
+
+.batch-summary-box {
+    flex: 0 0 200px;
+    background: var(--bg-surface);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    transition: var(--transition);
+    min-width: 180px;
+}
+
+.batch-summary-box:hover {
+    border-color: var(--primary-border);
+    box-shadow: var(--shadow-md);
+}
+
+.box-active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.batch-box-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.batch-box-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.batch-box-stats {
+    display: flex;
+    gap: 12px;
+}
+
+.box-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-num {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.stat-txt {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Activity Grid (2-col on desktop, 1-col on mobile)
+   -------------------------------------------------------------------------- */
+.activity-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile Record Cards (attendance history / dashboard recent)
+   -------------------------------------------------------------------------- */
+.mobile-record-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mobile-record-card .m-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.m-card-titles {
+    flex: 1;
+    min-width: 0;
+}
+
+.m-card-titles .m-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.m-card-titles .m-meta {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+}
+
+.m-card-days {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.m-card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* Mobile Student Summary Cards (dashboard pending) */
+.mobile-student-summary-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile Student Item Cards (students list page)
+   -------------------------------------------------------------------------- */
+.mobile-student-item-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.mobile-student-item-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-border);
+}
+
+.m-student-left .student-avatar-lg {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-border);
+}
+
+.m-student-center {
+    flex: 1;
+    min-width: 0;
+}
+
+.m-student-center .s-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.m-student-center .s-enroll {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.m-student-center .s-class {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.m-student-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.m-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    background: var(--success-light);
+    border: 1px solid var(--success-border);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--success);
+}
+
+.m-meta-pill.m-pill-muted {
+    background: var(--bg-surface-soft);
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Form Grid 4-column
+   -------------------------------------------------------------------------- */
+.form-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   Auth / Login Card Wide
+   -------------------------------------------------------------------------- */
+.auth-card-wide {
+    max-width: 520px;
+}
+
+.auth-switch-link {
+    text-align: center;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin-top: 16px;
+}
+
+.auth-switch-link a {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-switch-link a:hover {
+    text-decoration: underline;
+}
+
+.form-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Color Helpers
+   -------------------------------------------------------------------------- */
+.text-purple  { color: var(--accent); }
+.icon-purple  { color: var(--accent); }
+.btn-outline-white {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.5);
+    color: #fff;
+    border-radius: var(--radius-md);
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-outline-white:hover {
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.8);
+}
+
+.btn-primary-light {
+    background: rgba(255,255,255,0.2);
+    border: 1.5px solid rgba(255,255,255,0.35);
+    color: #fff;
+    border-radius: var(--radius-md);
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-primary-light:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* --------------------------------------------------------------------------
+   Search Box Small (inline filter in students page)
+   -------------------------------------------------------------------------- */
+.search-box-sm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-surface-soft);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 8px 14px;
+    width: 100%;
+    max-width: 320px;
+}
+
+.search-box-sm input {
+    border: none;
+    background: none;
+    outline: none;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    width: 100%;
+}
+
+.form-control-sm {
+    height: 36px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   Field Label Small
+   -------------------------------------------------------------------------- */
+.field-label-sm {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    display: block;
+}
+
+/* --------------------------------------------------------------------------
+   Items Grid (2-col or 3-col batch items)
+   -------------------------------------------------------------------------- */
+.batch-items-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Bottom Navigation (Mobile)
+   -------------------------------------------------------------------------- */
+.bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-color);
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.07);
+}
+
+.bottom-nav-inner {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.bnav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex: 1;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 4px 0;
+    transition: var(--transition);
+}
+
+.bnav-item.active,
+.bnav-item:hover {
+    color: var(--primary);
+}
+
+.bnav-item svg {
+    width: 22px;
+    height: 22px;
+}
+
+.bnav-scan {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff !important;
+    border-radius: 50%;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: -18px;
+    box-shadow: 0 4px 16px rgba(59,130,246,0.4);
+    flex: 0 0 auto;
+    font-size: 0.6rem;
+    gap: 1px;
+}
+
+.bnav-scan:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(59,130,246,0.5);
+}
+
+/* ==========================================================================
+   MOBILE-FIRST MEDIA QUERY ADDITIONS
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* Visibility helpers flip on mobile */
+    .desktop-only { display: none !important; }
+    .mobile-only  { display: block !important; }
+
+    /* Bottom nav visible on mobile */
+    .bottom-nav { display: block; }
+
+    /* Extra padding at bottom for bottom nav */
+    .main-container { padding-bottom: 80px; }
+
+    /* Batch Hero Card */
+    .batch-hero-card {
+        padding: 18px 16px;
+        border-radius: var(--radius-lg);
+    }
+
+    .batch-hero-text h2 {
+        font-size: 1.2rem;
+    }
+
+    .batch-hero-actions {
+        margin-top: 12px;
+        width: 100%;
+    }
+
+    .batch-hero-actions .btn-outline-white,
+    .batch-hero-actions .btn-primary-light {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.8rem;
+        padding: 8px 10px;
+    }
+
+    /* Activity grid collapses to 1 column */
+    .activity-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    /* Form grid 4-column collapses */
+    .form-grid-4 {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    /* Teacher profile badge — hide text on mobile */
+    .teacher-info-mini {
+        display: none;
+    }
+
+    /* Batch pill shorter on mobile */
+    .batch-pill-name {
+        max-width: 80px;
+    }
+
+    /* Modal dialog full-width-ish on mobile */
+    .modal-dialog {
+        max-width: 100%;
+        margin: 0;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        max-height: 85vh;
+    }
+
+    .modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    /* Batch items grid collapses */
+    .batch-items-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Horizontal batch grid scrolls on mobile */
+    .batches-horizontal-grid {
+        gap: 10px;
+    }
+
+    .batch-summary-box {
+        flex: 0 0 160px;
+        min-width: 150px;
+    }
+
+    /* Search box full width on mobile */
+    .search-box-sm {
+        max-width: 100%;
+    }
+
+    /* Mobile student item card */
+    .mobile-student-item-card {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .m-student-left .student-avatar-lg {
+        width: 46px;
+        height: 46px;
+    }
+
+    /* Header: hide teacher dept text on small screens */
+    .teacher-dept-txt {
+        display: none;
+    }
+
+    /* Bottom nav item text show only for active */
+    .bnav-item span {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Very small phones */
+    .form-grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    .batch-hero-text h2 {
+        font-size: 1.05rem;
+    }
+
+    .avatar-circle {
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .btn-batch-pill {
+        padding: 5px 10px;
+        font-size: 0.78rem;
+    }
+}

@@ -4,20 +4,25 @@
 
 {% block content %}
 <div class="recognition-wrapper">
-    <!-- Top Header & Instructions -->
+    <!-- Top Header -->
     <div class="page-header">
         <div>
-            <h1 class="page-title">Live AI Facial Recognition Attendance</h1>
-            <p class="page-subtitle">Real-time deep learning face detection and verification through browser webcam.</p>
+            <h1 class="page-title">Live AI Attendance Scanner</h1>
+            <p class="page-subtitle">
+                Real-time face detection &amp; recognition.
+                {% if active_batch %}
+                Scanning for: <strong style="color:var(--primary);">{{ active_batch.name }}</strong>
+                {% endif %}
+            </p>
         </div>
-        <div class="header-badges">
-            <span class="badge-session-date">Active Date: <strong>{{ active_session_date }}</strong></span>
+        <div class="header-badges" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+            <span class="badge-session-date">Date: <strong>{{ active_session_date }}</strong></span>
             <form method="POST" action="{{ url_for('advance_day') }}" class="inline-form">
-                <button type="submit" class="btn btn-xs btn-outline-primary" title="Advance to Next Day to test multi-day attendance">
-                    + Advance Day (+1)
+                <button type="submit" class="btn btn-xs btn-outline-primary" title="Advance to Next Day">
+                    + Next Day
                 </button>
             </form>
-            <span class="badge-active-model">YuNet + SFace (128-D)</span>
+            <span class="badge-active-model desktop-only">YuNet + SFace (128-D)</span>
             <span class="badge-student-count">{{ students_count }} Enrolled</span>
         </div>
     </div>
@@ -26,19 +31,21 @@
     <div class="recognition-grid">
         <!-- Left Panel: Webcam Stream & Bounding Box Canvas -->
         <div class="webcam-main-panel content-card">
-            <div class="card-header-flex">
+
+            <!-- Controls Row - compact on mobile -->
+            <div class="card-header-flex" style="flex-wrap:wrap;gap:10px;">
                 <div class="webcam-status-indicator">
                     <span class="indicator-dot" id="streamDot"></span>
                     <span class="indicator-text" id="streamStatusText">Camera Inactive</span>
                 </div>
-                <div class="stream-controls">
+                <div class="stream-controls" style="display:flex;gap:6px;flex-wrap:wrap;">
                     <button type="button" class="btn btn-sm btn-success" id="btnStartCam" onclick="startWebcam()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                        <span>Start Camera</span>
+                        <span>Start</span>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline" id="btnFlipCam" onclick="flipCamera()" title="Switch Front / Rear Camera (Mobile)">
+                    <button type="button" class="btn btn-sm btn-outline" id="btnFlipCam" onclick="flipCamera()" title="Switch Front / Rear Camera">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
-                        <span>Flip Cam</span>
+                        <span>Flip</span>
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-danger" id="btnStopCam" onclick="stopWebcam()" disabled>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"></rect></svg>
@@ -58,8 +65,8 @@
                         <div class="idle-camera-icon">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                         </div>
-                        <h3>Webcam is Currently Turned Off</h3>
-                        <p>Click the <strong>Start Camera</strong> button above to begin real-time face detection and attendance logging.</p>
+                        <h3>Camera is Off</h3>
+                        <p>Tap <strong>Start</strong> to begin face detection.</p>
                         <button type="button" class="btn btn-primary" onclick="startWebcam()">Turn On Camera</button>
                     </div>
                 </div>
@@ -73,7 +80,7 @@
                     <span class="reticle-hint">Align Face Inside Box</span>
                 </div>
 
-                <!-- Dramatic Animated Unregistered Person Alert HUD -->
+                <!-- Unregistered Person Alert HUD -->
                 <div id="unregisteredAlertHUD" class="unregistered-hud hud-hidden">
                     <div class="hud-content">
                         <div class="hud-warning-icon">
@@ -81,13 +88,13 @@
                         </div>
                         <div class="hud-text">
                             <h3>NOT REGISTERED</h3>
-                            <p>Access Denied &bull; Face Not Found in Database</p>
+                            <p>Access Denied &bull; Face Not Found</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Real-time Recognition Banner -->
+            <!-- Recognition Banner -->
             <div id="recognitionStatusBanner" class="recognition-banner banner-idle">
                 <div class="banner-icon" id="bannerIcon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -101,18 +108,18 @@
                 </div>
             </div>
 
-            <!-- Recognition Settings & Diagnostics -->
-            <div class="diagnostics-bar">
+            <!-- Diagnostics Bar (desktop only) -->
+            <div class="diagnostics-bar desktop-only">
                 <div class="diagnostic-item">
-                    <span class="diag-label">Matching Algorithm:</span>
-                    <span class="diag-value">Cosine Similarity Metric</span>
+                    <span class="diag-label">Algorithm:</span>
+                    <span class="diag-value">Cosine Similarity</span>
                 </div>
                 <div class="diagnostic-item">
-                    <span class="diag-label">Recognition Threshold:</span>
-                    <span class="diag-value">{{ threshold }} (Fixed Standard)</span>
+                    <span class="diag-label">Threshold:</span>
+                    <span class="diag-value">{{ threshold }}</span>
                 </div>
                 <div class="diagnostic-item">
-                    <span class="diag-label">Inference Frame Rate:</span>
+                    <span class="diag-label">FPS:</span>
                     <span class="diag-value" id="fpsDisplay">Idle</span>
                 </div>
             </div>
@@ -123,7 +130,7 @@
             <div class="card-header-flex">
                 <div>
                     <h2 class="card-title">Today's Check-ins</h2>
-                    <p class="card-subtitle">Real-time attendance record stream</p>
+                    <p class="card-subtitle">Real-time attendance stream</p>
                 </div>
                 <span class="badge-count" id="todayCountBadge">{{ today_records|length }} Present</span>
             </div>
@@ -132,7 +139,7 @@
             <div class="audio-toggle-bar">
                 <label class="toggle-checkbox">
                     <input type="checkbox" id="chkAudioFeedback" checked>
-                    <span>Sound notification on recognition</span>
+                    <span>Sound on recognition</span>
                 </label>
             </div>
 
@@ -151,46 +158,46 @@
                             </div>
                         </div>
                         <div class="feed-status">
-                            <span class="badge-status status-present">&check; Present</span>
+                            <span class="badge-status status-present">&#10003; Present</span>
                         </div>
                     </div>
                     {% endfor %}
                 {% else %}
                     <div class="empty-state-sm" id="emptyFeedState">
-                        <p class="empty-title">No check-ins recorded yet today</p>
-                        <p class="empty-text">Stand before the camera to record your attendance.</p>
+                        <p class="empty-title">No check-ins yet today</p>
+                        <p class="empty-text">Stand before the camera to record attendance.</p>
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- College Viva Explanation Notes -->
-    <div class="tech-explanation-card">
+    <!-- How It Works Card (desktop only) -->
+    <div class="tech-explanation-card desktop-only">
         <h3>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            How Pretrained Deep Learning Facial Recognition Works (Presentation Quick Reference)
+            How AI Facial Recognition Works
         </h3>
         <div class="tech-steps-grid">
             <div class="tech-step">
                 <div class="step-num">1</div>
                 <h4>Face Detection (YuNet)</h4>
-                <p>A fast, lightweight convolutional neural network detects the bounding box and 5 key facial landmarks (left/right eyes, nose tip, left/right mouth corners) regardless of slight tilt.</p>
+                <p>A lightweight CNN detects the bounding box and 5 key facial landmarks regardless of slight tilt.</p>
             </div>
             <div class="tech-step">
                 <div class="step-num">2</div>
-                <h4>Affine Alignment &amp; Normalization</h4>
-                <p>The detected face is geometrically rotated and cropped into a standardized 112&times;112 pixel canvas so lighting and pose variations are minimized.</p>
+                <h4>Affine Alignment</h4>
+                <p>The face is geometrically aligned into a standardized 112×112 canvas to minimize lighting variation.</p>
             </div>
             <div class="tech-step">
                 <div class="step-num">3</div>
                 <h4>Embedding Extraction (SFace)</h4>
-                <p>A deep CNN maps the aligned face into an irreversible 128-dimensional mathematical vector where faces of the same person are clustered close together.</p>
+                <p>A deep CNN maps the aligned face into a 128-dimensional vector where same-person faces cluster together.</p>
             </div>
             <div class="tech-step">
                 <div class="step-num">4</div>
                 <h4>Cosine Similarity &amp; Attendance</h4>
-                <p>The vector is matched against registered student encodings. If cosine similarity &ge; 0.45, identity is verified and attendance is saved with uniqueness check (no duplicates).</p>
+                <p>The vector is matched against registered encodings. If similarity ≥ {{ threshold }}, attendance is saved.</p>
             </div>
         </div>
     </div>
